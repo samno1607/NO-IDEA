@@ -1473,7 +1473,7 @@ int hsi_ll_check_channel(int channel)
 	}
 
 	else if(hsi_ll_data.ch[channel].tx.state != HSI_LL_TX_STATE_OPEN_CONN){
-#if 1 /
+#if 1 
 		printk("\nHSI_LL: ch %d Try again %s %d\n", channel, __func__, __LINE__);
 #endif
 		return -EBUSY;

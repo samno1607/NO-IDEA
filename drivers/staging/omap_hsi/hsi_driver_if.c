@@ -927,7 +927,6 @@ int hsi_ioctl(struct hsi_device *dev, unsigned int command, void *arg)
 		}
 		*(size_t *)arg = hsi_get_rx_fifo_occupancy(hsi_ctrl, fifo);
 		break;
-	case HSI_IOCTL_SET_WAKE_RX_3WIRES_MODE:
 		dev_info(hsi_ctrl->dev,
 			 "Entering RX wakeup in 3 wires mode (no CAWAKE)\n");
 		pport->wake_rx_3_wires_mode = 1;
@@ -942,7 +941,6 @@ int hsi_ioctl(struct hsi_device *dev, unsigned int command, void *arg)
 			    base, HSI_SYS_SET_WAKE_REG(port));
 		hsi_driver_disable_interrupt(pport, HSI_CAWAKEDETECTED);
 		break;
-	case HSI_IOCTL_SET_WAKE_RX_4WIRES_MODE:
 		dev_info(hsi_ctrl->dev, "Entering RX wakeup in 4 wires mode\n");
 		pport->wake_rx_3_wires_mode = 0;
 		/* HW errata HSI-C1BUG00085 : go back to normal IDLE mode */

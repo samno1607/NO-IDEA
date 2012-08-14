@@ -253,7 +253,7 @@ typedef struct hsi_ll_rx_ch {
 	unsigned int size;
 	unsigned int close_req;
 	struct timer_list timer_id;
-if defined (MIPI_HSI_CP_OPEN_CONN_NAK_FOR_RETRY)
+#if defined (MIPI_HSI_CP_OPEN_CONN_NAK_FOR_RETRY)
 	unsigned int nak_sent;
 #endif
 #if defined (MIPI_HSI_CP_OPEN_CONN_ID_FOR_RETRY)

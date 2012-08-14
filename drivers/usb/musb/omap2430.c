@@ -356,6 +356,7 @@ int musb_platform_set_mode(struct musb *musb, u8 musb_mode)
 	devctl |= MUSB_DEVCTL_SESSION;
 	musb_writeb(musb->mregs, MUSB_DEVCTL, devctl);
 
+	otg_put_transceiver(musb->xceiv);
 	return 0;
 }
 
