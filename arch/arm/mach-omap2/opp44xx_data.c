@@ -23,13 +23,12 @@
 #include <linux/module.h>
 #include <linux/err.h>
 #include <linux/delay.h>
-#if defined (CONFIG_MACH_LGE_CX2)
 #include <linux/io.h>
-#endif
 
 #include <plat/opp.h>
 #include <plat/clock.h>
 #include <plat/omap_device.h>
+#include <plat/control.h>
 
 #include "cm-regbits-34xx.h"
 #include "prm.h"
