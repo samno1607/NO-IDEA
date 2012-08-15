@@ -102,35 +102,35 @@ static struct omap_opp_def __initdata omap44xx_pre_es2_1_opp_def_list[] = {
 
 static struct omap_opp_def __initdata omap44xx_opp_def_list[] = {
 	/* MPU OPPLP - DPLL cascading */
-	OMAP_OPP_DEF("mpu", true, 100000000, 1000000),
+	OMAP_OPP_DEF("mpu", true, 100000000, 850000),
 	/* MPU OPPLP - OPP25 */
-	OMAP_OPP_DEF("mpu", true, 200000000, 1005000),
+	OMAP_OPP_DEF("mpu", true, 200000000, 900000),
 	/* MPU OPP1 - OPP50 */
-	OMAP_OPP_DEF("mpu", true, 300000000, 1025000),
+	OMAP_OPP_DEF("mpu", true, 300000000, 925000),
 	/* MPU OPP1 - OPP75 */
-	OMAP_OPP_DEF("mpu", true, 400000000, 1050000),
+	OMAP_OPP_DEF("mpu", true, 400000000, 1000000),
 	/* MPU OPP1 - OPP90 */
-	OMAP_OPP_DEF("mpu", true, 500000000, 1100000),
+	OMAP_OPP_DEF("mpu", true, 500000000, 1025000),
 	/* MPU OPP2 - OPP100 */
-	OMAP_OPP_DEF("mpu", true, 600000000, 1150000),
+	OMAP_OPP_DEF("mpu", true, 600000000, 1075000),
 	/* MPU OPP2 - OPP150 */
-	OMAP_OPP_DEF("mpu", true, 700000000, 1200000),
+	OMAP_OPP_DEF("mpu", true, 700000000, 1100000),
 	/* MPU OPP3 - OPP-Turbo */
-	OMAP_OPP_DEF("mpu", true, 800000000, 1300000),
+	OMAP_OPP_DEF("mpu", true, 800000000, 1150000),
 	/* MPU OPP3 - OPP-Turbo2 */
-	OMAP_OPP_DEF("mpu", true, 900000000, 1313000),
+	OMAP_OPP_DEF("mpu", true, 900000000, 1175000),
 	/* MPU OPP4 - OPP-Nitro */
-	OMAP_OPP_DEF("mpu", true, 1008000000, 1370000),
+	OMAP_OPP_DEF("mpu", true, 1008000000, 1200000),
 	/* MPU OPP4 - OPP-Nitro2 */
-	OMAP_OPP_DEF("mpu", true, 1100000000, 1374000),
+	OMAP_OPP_DEF("mpu", true, 1100000000, 1250000),
 	/* MPU OPP4 - OPP-TNT */
-	OMAP_OPP_DEF("mpu", true, 1200000000, 1375000),
+	OMAP_OPP_DEF("mpu", true, 1200000000, 1300000),
 	/* MPU OPP4 - OPP-TNT2 */
-	OMAP_OPP_DEF("mpu", true, 1300000000, 1380000),
+	OMAP_OPP_DEF("mpu", true, 1300000000, 1350000),
 	/* MPU OPP4 - OPP-XTM */
-	OMAP_OPP_DEF("mpu", true, 1400000000, 1400000),
+	OMAP_OPP_DEF("mpu", true, 1400000000, 1375000),
 	/* MPU OPP4 - OPP-XTM2 */
-	OMAP_OPP_DEF("mpu", false, 1500000000, 1425000),
+	OMAP_OPP_DEF("mpu", false, 1500000000, 1400000),
 	/* MPU OPP4 - OPP-XTM3 */
 	OMAP_OPP_DEF("mpu", false, 1600000000, 1450000),
 
