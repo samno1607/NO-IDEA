@@ -38,13 +38,6 @@
 #include "cm-regbits-44xx.h"
 extern bool dss_get_mainclk_state(void);
 
-#if defined (CONFIG_MACH_LGE_CX2)
-#define TNT_FREQ 1200000000
-#define OMAP44XX_CONTROL_FUSE_MPU_OPPTNT		0x24C
-#define CTRL_FUSE_OPP_VDD_MPU_3 (OMAP443X_SCM_BASE + OMAP44XX_CONTROL_FUSE_MPU_OPPTNT)
-#endif
-
-
 static struct clk *dpll_mpu_clk, *iva_clk, *dsp_clk, *l3_clk, *core_m2_clk;
 static struct clk *core_m3_clk, *core_m6_clk, *core_m7_clk;
 static struct clk *per_m3_clk, *per_m6_clk;
@@ -109,22 +102,19 @@ static struct omap_opp_def __initdata omap44xx_pre_es2_1_opp_def_list[] = {
 
 static struct omap_opp_def __initdata omap44xx_opp_def_list[] = {
 	/* MPU OPPLP - DPLL cascading */
-	OMAP_OPP_DEF("mpu", false, 196608000, 1005000),
+	OMAP_OPP_DEF("mpu", true, 192000000, 1005000),
 	/* MPU OPP1 - OPP50 */
 	OMAP_OPP_DEF("mpu", true, 300000000, 1025000),
 	/* MPU OPP2 - OPP100 */
 	OMAP_OPP_DEF("mpu", true, 600000000, 1200000),
 	/* MPU OPP3 - OPP-Turbo */
 	OMAP_OPP_DEF("mpu", true, 800000000, 1313000),
-    #if defined (CONFIG_MACH_LGE_CX2)
-	/* MPU OPP4 - OPP-SB */
+	/* MPU OPP4 - OPP-Nitro */
 	OMAP_OPP_DEF("mpu", true, 1008000000, 1374000),
 	/* MPU OPP4 - OPP-TNT */
-	OMAP_OPP_DEF("mpu", false, TNT_FREQ, 1375000),
-    #else
-	/* MPU OPP4 - OPP-SB */
-	OMAP_OPP_DEF("mpu", true, 1008000000, 1375000),
-    #endif
+	OMAP_OPP_DEF("mpu", true, 1200000000, 1375000),
+	/* MPU OPP4 - OPP-XTM */
+	OMAP_OPP_DEF("mpu", true, 1400000000, 1400000),
 
 	/* IVA OPPLP - DPLL cascading */
 	OMAP_OPP_DEF("iva", false,  98304000, 1011000),
@@ -200,7 +190,7 @@ static struct omap_opp_def __initdata omap44xx_opp_def_list[] = {
 #define DPLL_CORE_M3_OPP50_RATE		200000000
 #define DPLL_CORE_M3_OPP100_RATE	320000000
 #define DPLL_CORE_M6_OPP50_RATE		200000000
-#define DPLL_CORE_M6_OPP100_RATE	266600000
+#define DPLL_CORE_M6_OPP100_RATE	266666666
 #define DPLL_CORE_M7_OPP50_RATE		133333333
 #define DPLL_CORE_M7_OPP100_RATE	266666666
 #define DPLL_PER_M3_OPP50_RATE		192000000
@@ -541,10 +531,7 @@ int __init omap4_pm_init_opp_table(void)
 	struct device *dev;
 	struct clk *gpu_fclk;
 	int i, r;
-        #if defined (CONFIG_MACH_LGE_CX2)
-	struct omap_opp *tnt_opp;
-	int has_tnt_opp = 0;
-	#endif
+	struct omap_opp;
 
 	/*
 	 * Allow multiple calls, but initialize only if not already initalized
@@ -592,30 +579,6 @@ int __init omap4_pm_init_opp_table(void)
 	if (dev)
 		opp_populate_rate_fns(dev, omap4_mpu_set_rate,
 				omap4_mpu_get_rate);
-
-#if defined (CONFIG_MACH_LGE_CX2)
-	/* Enable 1.2Gz OPP for silicon that supports it
-	 * TODO: determine if FUSE_OPP_VDD_MPU_3 is a reliable source to
-	 * determine 1.2Gz availability.
-	 */
-	has_tnt_opp = __raw_readl(OMAP2_L4_IO_ADDRESS(CTRL_FUSE_OPP_VDD_MPU_3));
-	has_tnt_opp &= 0xFFFFFF;
-
-	if (has_tnt_opp) {
-		tnt_opp = opp_find_freq_exact(dev, TNT_FREQ, false);
-		if (IS_ERR(tnt_opp))
-		{
-			printk(KERN_ERR"[1.2GHz support Fail] %d\n",tnt_opp);
-			pr_err("unable to find OPP for 1.2Gz\n");
-		}
-		else
-		{
-			printk(KERN_ERR"[1.2GHz support success] %d\n",tnt_opp);
-			opp_enable(tnt_opp);
-		}
-	}
-#endif
-
 
 	dev = omap2_get_iva_device();
 	if (dev)
