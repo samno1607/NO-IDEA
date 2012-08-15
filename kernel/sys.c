@@ -1,3 +1,9 @@
+/*
+ *  linux/kernel/sys.c
+ *
+ *  Copyright (C) 1991, 1992  Linus Torvalds
+ */
+
 #include <linux/module.h>
 #include <linux/mm.h>
 #include <linux/utsname.h>
@@ -77,6 +83,11 @@
 # define SET_TSC_CTL(a)		(-EINVAL)
 #endif
 
+/*
+ * this is where the system-wide overflow UID and GID are defined, for
+ * architectures that now have 32-bit UID/GID but didn't in the past
+ */
+
 int overflowuid = DEFAULT_OVERFLOWUID;
 int overflowgid = DEFAULT_OVERFLOWGID;
 
@@ -85,18 +96,35 @@ EXPORT_SYMBOL(overflowuid);
 EXPORT_SYMBOL(overflowgid);
 #endif
 
+/*
+ * the same as above, but for filesystems which can only store a 16-bit
+ * UID and GID. as such, this is needed on all architectures
+ */
+
 int fs_overflowuid = DEFAULT_FS_OVERFLOWUID;
 int fs_overflowgid = DEFAULT_FS_OVERFLOWUID;
 
 EXPORT_SYMBOL(fs_overflowuid);
 EXPORT_SYMBOL(fs_overflowgid);
 
+/*
+ * this indicates whether you can reboot with ctrl-alt-del: the default is yes
+ */
+
 int C_A_D = 1;
 struct pid *cad_pid;
 EXPORT_SYMBOL(cad_pid);
 
+/*
+ * If set, this is used for preparing the system to power off.
+ */
+
 void (*pm_power_off_prepare)(void);
 
+/*
+ * set the priority of a task
+ * - the caller must hold the RCU read lock
+ */
 static int set_one_prio(struct task_struct *p, int niceval, int error)
 {
 	const struct cred *cred = current_cred(), *pcred = __task_cred(p);
@@ -134,6 +162,7 @@ SYSCALL_DEFINE3(setpriority, int, which, int, who, int, niceval)
 	if (which > PRIO_USER || which < PRIO_PROCESS)
 		goto out;
 
+	/* normalize: avoid signed division (rounding problems) */
 	error = -ESRCH;
 	if (niceval < -20)
 		niceval = -20;
@@ -166,14 +195,14 @@ SYSCALL_DEFINE3(setpriority, int, which, int, who, int, niceval)
 				who = cred->uid;
 			else if ((who != cred->uid) &&
 				 !(user = find_user(who)))
-				goto out_unlock;	
+				goto out_unlock;	/* No processes for this user */
 
 			do_each_thread(g, p) {
 				if (__task_cred(p)->uid == who)
 					error = set_one_prio(p, niceval, error);
 			} while_each_thread(g, p);
 			if (who != cred->uid)
-				free_uid(user);		
+				free_uid(user);		/* For find_user() */
 			break;
 	}
 out_unlock:
@@ -183,6 +212,12 @@ out:
 	return error;
 }
 
+/*
+ * Ugh. To avoid negative return values, "getpriority()" will
+ * not return the normal nice-value, but a negated value that
+ * has been offset by 20 (ie it returns 40..1 instead of -20..19)
+ * to stay compatible.
+ */
 SYSCALL_DEFINE2(getpriority, int, which, int, who)
 {
 	struct task_struct *g, *p;
@@ -225,7 +260,7 @@ SYSCALL_DEFINE2(getpriority, int, which, int, who)
 				who = cred->uid;
 			else if ((who != cred->uid) &&
 				 !(user = find_user(who)))
-				goto out_unlock;	
+				goto out_unlock;	/* No processes for this user */
 
 			do_each_thread(g, p) {
 				if (__task_cred(p)->uid == who) {
@@ -235,7 +270,7 @@ SYSCALL_DEFINE2(getpriority, int, which, int, who)
 				}
 			} while_each_thread(g, p);
 			if (who != cred->uid)
-				free_uid(user);		
+				free_uid(user);		/* for find_user() */
 			break;
 	}
 out_unlock:
@@ -245,6 +280,14 @@ out_unlock:
 	return retval;
 }
 
+/**
+ *	emergency_restart - reboot the system
+ *
+ *	Without shutting down any hardware or taking any locks
+ *	reboot the system.  This is called when we know we are in
+ *	trouble so this is our best effort to reboot.  This is
+ *	safe to call in interrupt context.
+ */
 void emergency_restart(void)
 {
 	machine_emergency_restart();
@@ -259,17 +302,23 @@ void kernel_restart_prepare(char *cmd)
 	sysdev_shutdown();
 }
 
+/**
+ *	kernel_restart - reboot the system
+ *	@cmd: pointer to buffer containing command to execute for restart
+ *		or %NULL
+ *
+ *	Shutdown everything and perform a clean reboot.
+ *	This is not safe to call in interrupt context.
+ */
 void kernel_restart(char *cmd)
 {
 #if CONFIG_ARCH_OMAP4
-
 	if(lge_is_force_ap_crash() == 1)
 	{
-		
-		if (lge_is_mark_cp_crash() == 1)	
+		if (lge_is_mark_cp_crash() == 1)	// ifx_coredump user process marked CP crash NV item
 		{
-			
-			twl_i2c_write_u8(0x14, 0x47, 0x06); 	
+			// without calling BUG();
+			twl_i2c_write_u8(0x14, 0x47, 0x06); 	// PMIC reset
 			return;
 		}
 
@@ -283,7 +332,6 @@ void kernel_restart(char *cmd)
 	}
 
 	twl_i2c_write_u8(0x14, 0x47, 0x06); 
-
 #else
 	kernel_restart_prepare(cmd);
 	if (!cmd)
@@ -302,21 +350,23 @@ static void kernel_shutdown_prepare(enum system_states state)
 	system_state = state;
 	device_shutdown();
 }
-
+/**
+ *	kernel_halt - halt the system
+ *
+ *	Shutdown everything and perform a clean system halt.
+ */
 void kernel_halt(void)
 {
 #if CONFIG_ARCH_OMAP4
 	twl_i2c_write_u8(TWL_MODULE_PM_MASTER, 0x07, 0x06);
 #endif
 
-   
    printk(KERN_INFO "PM: Syncing filesystems ... for kernel_halt");
    sys_sync();
    printk("done.\n");
-   
 
 	kernel_shutdown_prepare(SYSTEM_HALT);
-	disable_nonboot_cpus();					
+	disable_nonboot_cpus();			
 	sysdev_shutdown();
 	printk(KERN_EMERG "System halted.\n");
 
@@ -325,13 +375,16 @@ void kernel_halt(void)
 
 EXPORT_SYMBOL_GPL(kernel_halt);
 
+/**
+ *	kernel_power_off - power_off the system
+ *
+ *	Shutdown everything and perform a clean system power_off.
+ */
 void kernel_power_off(void)
 {
-   
    printk(KERN_INFO "PM: Syncing filesystems ... for kernel_power_off");
    sys_sync();
    printk("done.\n");
-   
 
 	kernel_shutdown_prepare(SYSTEM_POWER_OFF);
 	if (pm_power_off_prepare)
@@ -347,14 +400,25 @@ static DEFINE_MUTEX(reboot_mutex);
 
 extern void cp_power_down(void);
 
+/*
+ * Reboot system call: for obvious reasons only root may call it,
+ * and even root needs to set up some magic numbers in the registers
+ * so that some mistake won't make this reboot the whole machine.
+ * You can also set the meaning of the ctrl-alt-del-key here.
+ *
+ * reboot doesn't sync: do that yourself before calling this.
+ */
 SYSCALL_DEFINE4(reboot, int, magic1, int, magic2, unsigned int, cmd,
 		void __user *, arg)
 {
 	char buffer[256];
 	int ret = 0;
 
+	/* We only trust the superuser with rebooting the system. */
+	//if (!capable(CAP_SYS_BOOT))
+		//return -EPERM;
 printk("LINUX_REBOOT_CMD_RESTART");
-
+	/* For safety, we require "magic" arguments. */
 	if (magic1 != LINUX_REBOOT_MAGIC1 ||
 	    (magic2 != LINUX_REBOOT_MAGIC2 &&
 	                magic2 != LINUX_REBOOT_MAGIC2A &&
@@ -362,6 +426,9 @@ printk("LINUX_REBOOT_CMD_RESTART");
 	                magic2 != LINUX_REBOOT_MAGIC2C))
 		return -EINVAL;
 
+	/* Instead of trying to make the power_off code look like
+	 * halt when pm_power_off is not set do it the easy way.
+	 */
 	if ((cmd == LINUX_REBOOT_CMD_POWER_OFF) && !pm_power_off)
 		cmd = LINUX_REBOOT_CMD_HALT;
 
@@ -433,6 +500,11 @@ static void deferred_cad(struct work_struct *dummy)
 	kernel_restart(NULL);
 }
 
+/*
+ * This function gets called by ctrl-alt-del - ie the keyboard interrupt.
+ * As it's called within an interrupt, it may NOT sync: the only choice
+ * is whether to reboot at once, or just ignore the ctrl-alt-del.
+ */
 void ctrl_alt_del(void)
 {
 	static DECLARE_WORK(cad_work, deferred_cad);
@@ -442,7 +514,25 @@ void ctrl_alt_del(void)
 	else
 		kill_cad_pid(SIGINT, 1);
 }
-
+	
+/*
+ * Unprivileged users may change the real gid to the effective gid
+ * or vice versa.  (BSD-style)
+ *
+ * If you set the real gid at all, or set the effective gid to a value not
+ * equal to the real gid, then the saved gid is set to the new effective gid.
+ *
+ * This makes it possible for a setgid program to completely drop its
+ * privileges, which is often a useful assertion to make when you are doing
+ * a security audit over a program.
+ *
+ * The general idea is that a program which uses just setregid() will be
+ * 100% compatible with BSD.  A program which uses just setgid() will be
+ * 100% compatible with POSIX with saved IDs. 
+ *
+ * SMP: There are not races, the GIDs are checked only by filesystem
+ *      operations (as far as semantic preservation is concerned).
+ */
 SYSCALL_DEFINE2(setregid, gid_t, rgid, gid_t, egid)
 {
 	const struct cred *old;
@@ -485,6 +575,11 @@ error:
 	return retval;
 }
 
+/*
+ * setgid() is implemented like SysV w/ SAVED_IDS 
+ *
+ * SMP: Same implicit races as above.
+ */
 SYSCALL_DEFINE1(setgid, gid_t, gid)
 {
 	const struct cred *old;
@@ -511,6 +606,9 @@ error:
 	return retval;
 }
 
+/*
+ * change the user struct in a credentials set to match the new UID
+ */
 static int set_user(struct cred *new)
 {
 	struct user_struct *new_user;
@@ -530,6 +628,21 @@ static int set_user(struct cred *new)
 	return 0;
 }
 
+/*
+ * Unprivileged users may change the real uid to the effective uid
+ * or vice versa.  (BSD-style)
+ *
+ * If you set the real uid at all, or set the effective uid to a value not
+ * equal to the real uid, then the saved uid is set to the new effective uid.
+ *
+ * This makes it possible for a setuid program to completely drop its
+ * privileges, which is often a useful assertion to make when you are doing
+ * a security audit over a program.
+ *
+ * The general idea is that a program which uses just setreuid() will be
+ * 100% compatible with BSD.  A program which uses just setuid() will be
+ * 100% compatible with POSIX with saved IDs. 
+ */
 SYSCALL_DEFINE2(setreuid, uid_t, ruid, uid_t, euid)
 {
 	const struct cred *old;
@@ -579,7 +692,18 @@ error:
 	abort_creds(new);
 	return retval;
 }
-
+		
+/*
+ * setuid() is implemented like SysV with SAVED_IDS 
+ * 
+ * Note that SAVED_ID's is deficient in that a setuid root program
+ * like sendmail, for example, cannot set its uid to be a normal 
+ * user and then switch back, because if you're root, setuid() sets
+ * the saved uid too.  If you don't like this, blame the bright people
+ * in the POSIX committee and/or USG.  Note that the BSD-style setreuid()
+ * will allow a root program to temporarily drop privileges and be able to
+ * regain them by swapping the real and effective uid.  
+ */
 SYSCALL_DEFINE1(setuid, uid_t, uid)
 {
 	const struct cred *old;
@@ -616,6 +740,11 @@ error:
 	return retval;
 }
 
+
+/*
+ * This function implements a generic ability to update ruid, euid,
+ * and suid.  This allows you to implement the 4.4 compatible seteuid().
+ */
 SYSCALL_DEFINE3(setresuid, uid_t, ruid, uid_t, euid, uid_t, suid)
 {
 	const struct cred *old;
@@ -678,6 +807,9 @@ SYSCALL_DEFINE3(getresuid, uid_t __user *, ruid, uid_t __user *, euid, uid_t __u
 	return retval;
 }
 
+/*
+ * Same as above, but for rgid, egid, sgid.
+ */
 SYSCALL_DEFINE3(setresgid, gid_t, rgid, gid_t, egid, gid_t, sgid)
 {
 	const struct cred *old;
@@ -729,6 +861,13 @@ SYSCALL_DEFINE3(getresgid, gid_t __user *, rgid, gid_t __user *, egid, gid_t __u
 	return retval;
 }
 
+
+/*
+ * "setfsuid()" sets the fsuid - the uid used for filesystem checks. This
+ * is used for "access()" and for the NFS daemon (letting nfsd stay at
+ * whatever uid it wants to). It normally shadows "euid", except when
+ * explicitly set by setfsuid() or for access..
+ */
 SYSCALL_DEFINE1(setfsuid, uid_t, uid)
 {
 	const struct cred *old;
@@ -759,6 +898,9 @@ change_okay:
 	return old_fsuid;
 }
 
+/*
+ * Samma på svenska..
+ */
 SYSCALL_DEFINE1(setfsgid, gid_t, gid)
 {
 	const struct cred *old;
@@ -816,6 +958,18 @@ SYSCALL_DEFINE1(times, struct tms __user *, tbuf)
 	return (long) jiffies_64_to_clock_t(get_jiffies_64());
 }
 
+/*
+ * This needs some heavy checking ...
+ * I just haven't the stomach for it. I also don't fully
+ * understand sessions/pgrp etc. Let somebody who does explain it.
+ *
+ * OK, I think I have the protection semantics right.... this is really
+ * only important on a multi-user system anyway, to make sure one user
+ * can't send a signal to a process owned by another.  -TYT, 12/12/91
+ *
+ * Auch. Had to add the 'did_exec' flag to conform completely to POSIX.
+ * LBT 04.03.94
+ */
 SYSCALL_DEFINE2(setpgid, pid_t, pid, pid_t, pgid)
 {
 	struct task_struct *p;
@@ -831,6 +985,9 @@ SYSCALL_DEFINE2(setpgid, pid_t, pid, pid_t, pgid)
 		return -EINVAL;
 	rcu_read_lock();
 
+	/* From this point forward we keep holding onto the tasklist lock
+	 * so that our parent does not change from under us. -DaveM
+	 */
 	write_lock_irq(&tasklist_lock);
 
 	err = -ESRCH;
@@ -878,7 +1035,7 @@ SYSCALL_DEFINE2(setpgid, pid_t, pid, pid_t, pgid)
 
 	err = 0;
 out:
-	
+	/* All paths lead to here, thus we are safe. -DaveM */
 	write_unlock_irq(&tasklist_lock);
 	rcu_read_unlock();
 	return err;
@@ -957,10 +1114,13 @@ SYSCALL_DEFINE0(setsid)
 	int err = -EPERM;
 
 	write_lock_irq(&tasklist_lock);
-	
+	/* Fail if I am already a session leader */
 	if (group_leader->signal->leader)
 		goto out;
 
+	/* Fail if a process group id already exists that equals the
+	 * proposed session id.
+	 */
 	if (pid_task(sid, PIDTYPE_PGID))
 		goto out;
 
@@ -972,10 +1132,8 @@ SYSCALL_DEFINE0(setsid)
 	err = session;
 out:
 	write_unlock_irq(&tasklist_lock);
-	if (err > 0){
+	if (err > 0)
 		proc_sid_connector(group_leader);
-		sched_autogroup_create_attach(group_leader);
-	}
 	return err;
 }
 
@@ -1005,7 +1163,9 @@ SYSCALL_DEFINE1(newuname, struct new_utsname __user *, name)
 }
 
 #ifdef __ARCH_WANT_SYS_OLD_UNAME
-
+/*
+ * Old cruft
+ */
 SYSCALL_DEFINE1(uname, struct old_utsname __user *, name)
 {
 	int error = 0;
@@ -1101,6 +1261,10 @@ SYSCALL_DEFINE2(gethostname, char __user *, name, int, len)
 
 #endif
 
+/*
+ * Only setdomainname; getdomainname can be implemented by calling
+ * uname()
+ */
 SYSCALL_DEFINE2(setdomainname, char __user *, name, int, len)
 {
 	int errno;
@@ -1139,6 +1303,9 @@ SYSCALL_DEFINE2(getrlimit, unsigned int, resource, struct rlimit __user *, rlim)
 
 #ifdef __ARCH_WANT_SYS_OLD_GETRLIMIT
 
+/*
+ *	Back compatibility for getrlimit. Needed for some apps.
+ */
  
 SYSCALL_DEFINE2(old_getrlimit, unsigned int, resource,
 		struct rlimit __user *, rlim)
@@ -1182,7 +1349,12 @@ SYSCALL_DEFINE2(setrlimit, unsigned int, resource, struct rlimit __user *, rlim)
 		return retval;
 
 	if (resource == RLIMIT_CPU && new_rlim.rlim_cur == 0) {
-
+		/*
+		 * The caller is asking for an immediate RLIMIT_CPU
+		 * expiry.  But we use the zero value to mean "it was
+		 * never set".  So let's cheat and make it one second
+		 * instead
+		 */
 		new_rlim.rlim_cur = 1;
 	}
 
@@ -1193,6 +1365,12 @@ SYSCALL_DEFINE2(setrlimit, unsigned int, resource, struct rlimit __user *, rlim)
 	if (resource != RLIMIT_CPU)
 		goto out;
 
+	/*
+	 * RLIMIT_CPU handling.   Note that the kernel fails to return an error
+	 * code if it rejected the user's attempt to set RLIMIT_CPU.  This is a
+	 * very long-standing error, and fixing it now risks breakage of
+	 * applications, so we live with it
+	 */
 	if (new_rlim.rlim_cur == RLIM_INFINITY)
 		goto out;
 
@@ -1200,6 +1378,39 @@ SYSCALL_DEFINE2(setrlimit, unsigned int, resource, struct rlimit __user *, rlim)
 out:
 	return 0;
 }
+
+/*
+ * It would make sense to put struct rusage in the task_struct,
+ * except that would make the task_struct be *really big*.  After
+ * task_struct gets moved into malloc'ed memory, it would
+ * make sense to do this.  It will make moving the rest of the information
+ * a lot simpler!  (Which we're not doing right now because we're not
+ * measuring them yet).
+ *
+ * When sampling multiple threads for RUSAGE_SELF, under SMP we might have
+ * races with threads incrementing their own counters.  But since word
+ * reads are atomic, we either get new values or old values and we don't
+ * care which for the sums.  We always take the siglock to protect reading
+ * the c* fields from p->signal from races with exit.c updating those
+ * fields when reaping, so a sample either gets all the additions of a
+ * given child after it's reaped, or none so this sample is before reaping.
+ *
+ * Locking:
+ * We need to take the siglock for CHILDEREN, SELF and BOTH
+ * for  the cases current multithreaded, non-current single threaded
+ * non-current multithreaded.  Thread traversal is now safe with
+ * the siglock held.
+ * Strictly speaking, we donot need to take the siglock if we are current and
+ * single threaded,  as no one else can take our signal_struct away, no one
+ * else can  reap the  children to update signal->c* counters, and no one else
+ * can race with the signal-> fields. If we do not take any lock, the
+ * signal-> fields could be read out of order while another thread was just
+ * exiting. So we should  place a read memory barrier when we avoid the lock.
+ * On the writer side,  write memory barrier is implied in  __exit_signal
+ * as __exit_signal releases  the siglock spinlock after updating the signal->
+ * fields. But we don't do this yet to keep things simple.
+ *
+ */
 
 static void accumulate_thread_rusage(struct task_struct *t, struct rusage *r)
 {
@@ -1282,7 +1493,7 @@ out:
 			mmput(mm);
 		}
 	}
-	r->ru_maxrss = maxrss * (PAGE_SIZE / 1024); 
+	r->ru_maxrss = maxrss * (PAGE_SIZE / 1024); /* convert pages to KBs */
 }
 
 int getrusage(struct task_struct *p, int who, struct rusage __user *ru)
@@ -1480,6 +1691,13 @@ static void argv_cleanup(struct subprocess_info *info)
 	argv_free(info->argv);
 }
 
+/**
+ * orderly_poweroff - Trigger an orderly system poweroff
+ * @force: force poweroff if command execution fails
+ *
+ * This may be called from any context to trigger a system shutdown.
+ * If the orderly shutdown fails, it will force an immediate shutdown.
+ */
 int orderly_poweroff(bool force)
 {
 	int argc;
@@ -1513,6 +1731,9 @@ int orderly_poweroff(bool force)
 		printk(KERN_WARNING "Failed to start orderly shutdown: "
 		       "forcing the issue\n");
 
+		/* I guess this should try to kick off some daemon to
+		   sync and poweroff asap.  Or not even bother syncing
+		   if we're doing an emergency shutdown? */
 		emergency_sync();
 		kernel_power_off();
 	}
