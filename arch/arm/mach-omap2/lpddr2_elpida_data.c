@@ -14,8 +14,8 @@
 #include <mach/emif.h>
 
 const struct lpddr2_timings timings_elpida_400_mhz = {
-	.max_freq	= 400000000,
-	.RL		= 6,
+	.max_freq	= 550000000,
+	.RL		= 11,
 	.tRPab		= 21,
 	.tRCD		= 18,
 	.tWR		= 15,
@@ -37,7 +37,7 @@ const struct lpddr2_timings timings_elpida_400_mhz = {
 };
 
 const struct lpddr2_timings timings_elpida_333_mhz = {
-	.max_freq	= 333000000,
+	.max_freq	= 366000000,
 	.RL		= 5,
 	.tRPab		= 21,
 	.tRCD		= 18,
@@ -60,7 +60,7 @@ const struct lpddr2_timings timings_elpida_333_mhz = {
 };
 
 const struct lpddr2_timings timings_elpida_200_mhz = {
-	.max_freq	= 200000000,
+	.max_freq	= 220000000,
 	.RL		= 3,
 	.tRPab		= 21,
 	.tRCD		= 18,

@@ -39,8 +39,8 @@ const struct lpddr2_addressing addressing_table[] = {
  * timings are not available from the device data sheet.
  */
 const struct lpddr2_timings timings_jdec_400_mhz = {
-	.max_freq	= 400000000,
-	.RL		= 6,
+	.max_freq	= 550000000,
+	.RL		= 11,
 	.tRPab		= 21,
 	.tRCD		= 18,
 	.tWR		= 15,
@@ -63,7 +63,7 @@ const struct lpddr2_timings timings_jdec_400_mhz = {
 
 /* Base AC Timing values specified by JESD209-2 for 333 MHz operation */
 const struct lpddr2_timings timings_jdec_333_mhz = {
-	.max_freq	= 333000000,
+	.max_freq	= 366000000,
 	.RL		= 5,
 	.tRPab		= 21,
 	.tRCD		= 18,
@@ -87,7 +87,7 @@ const struct lpddr2_timings timings_jdec_333_mhz = {
 
 /* Base AC Timing values specified by JESD209-2 for 200 MHz operation */
 const struct lpddr2_timings timings_jdec_200_mhz = {
-	.max_freq	= 200000000,
+	.max_freq	= 220000000,
 	.RL		= 3,
 	.tRPab		= 21,
 	.tRCD		= 18,

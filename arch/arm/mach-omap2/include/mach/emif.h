@@ -21,7 +21,7 @@
 #define EMIF2	1
 
 /* The maximum frequency at which the LPDDR2 interface can operate in Hz*/
-#define MAX_LPDDR2_FREQ	400000000	/* 400 MHz */
+#define MAX_LPDDR2_FREQ	550000000	/* 550 MHz */
 
 /* 19.2 MHz to be used for finding initialization values */
 #define EMIF_FREQ_19_2_MHZ 19200000	/* 19.2 MHz */
@@ -199,7 +199,7 @@
  * values suggested by hw team.
  */
 #define EMIF_DDR_PHY_CTRL_1_BASE_VAL			0x049FF
-#define EMIF_DLL_SLAVE_DLY_CTRL_400_MHZ			0x41
+#define EMIF_DLL_SLAVE_DLY_CTRL_550_MHZ			0x37
 #define EMIF_DLL_SLAVE_DLY_CTRL_200_MHZ			0x80
 #define EMIF_DLL_SLAVE_DLY_CTRL_100_MHZ_AND_LESS	0xFF
 
