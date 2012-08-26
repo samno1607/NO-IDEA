@@ -12,6 +12,18 @@ config IOSCHED_NOOP
 	  that do their own scheduling and require only minimal assistance from
 	  the kernel.
 
+config IOSCHED_VR
+	bool
+	default y
+	---help---
+	  The vr is good experiment
+
+config IOSCHED_SIO
+	bool
+	default y
+	---help---
+	  The sio is good experiment
+
 config IOSCHED_DEADLINE
 	tristate "Deadline I/O scheduler"
 	default y
@@ -59,6 +71,12 @@ choice
 	config DEFAULT_NOOP
 		bool "No-op"
 
+	config DEFAULT_VR
+		bool "VR"
+
+	config DEFAULT_SIO
+		bool "SIO"
+
 endchoice
 
 config DEFAULT_IOSCHED
@@ -66,6 +84,8 @@ config DEFAULT_IOSCHED
 	default "deadline" if DEFAULT_DEADLINE
 	default "cfq" if DEFAULT_CFQ
 	default "noop" if DEFAULT_NOOP
+	default "vr" if DEFAULT_VR
+	default "sio" if DEFAULT_SIO
 
 endmenu
 
