@@ -65,7 +65,7 @@ UTS_TRUNCATE="cut -b -$UTS_LEN"
 
   echo \#define LINUX_COMPILE_TIME \"`date +%T`\"
   echo \#define LINUX_COMPILE_BY \"`echo samno`\"
-  echo \#define LINUX_COMPILE_HOST \"`echo PK`\"
+  echo \#define LINUX_COMPILE_HOST \"`echo NI`\"
 
   domain=`dnsdomainname 2> /dev/null`
   if [ -z "$domain" ]; then
@@ -78,7 +78,7 @@ UTS_TRUNCATE="cut -b -$UTS_LEN"
     echo \#define LINUX_COMPILE_DOMAIN
   fi
 
-  echo \#define LINUX_COMPILER \"`echo V1.6-Ressurection Edition`\"
+  echo \#define LINUX_COMPILER \"`echo NOIDEA-b1`\"
 ) > .tmpcompile
 
 # Only replace the real compile.h if the new one is different,
