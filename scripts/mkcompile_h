@@ -78,7 +78,7 @@ UTS_TRUNCATE="cut -b -$UTS_LEN"
     echo \#define LINUX_COMPILE_DOMAIN
   fi
 
-  echo \#define LINUX_COMPILER \"`echo NOIDEA-b1`\"
+  echo \#define LINUX_COMPILER \"`echo NOIDEA-b2`\"
 ) > .tmpcompile
 
 # Only replace the real compile.h if the new one is different,
