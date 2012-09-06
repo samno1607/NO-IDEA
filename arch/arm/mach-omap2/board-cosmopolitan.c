@@ -2214,15 +2214,15 @@ static struct omap_volt_pmic_info omap_pmic_iva = {
 static struct omap_volt_vc_data vc_config = {
 	.vdd0_on = 1375000,        /* 1.375v */
 	.vdd0_onlp = 1375000,      /* 1.375v */
-	.vdd0_ret = 837500,       /* 0.8375v */
+	.vdd0_ret = 800000,       /* 0.8v */
 	.vdd0_off = 0,		/* 0 v */
 	.vdd1_on = 1300000,        /* 1.3v */
 	.vdd1_onlp = 1300000,      /* 1.3v */
-	.vdd1_ret = 837500,       /* 0.8375v */
+	.vdd1_ret = 800000,       /* 0.8v */
 	.vdd1_off = 0,		/* 0 v */
 	.vdd2_on = 1200000,        /* 1.2v */
 	.vdd2_onlp = 1200000,      /* 1.2v */
-	.vdd2_ret = 837500,       /* .8375v */
+	.vdd2_ret = 800000,       /* 0.8v */
 	.vdd2_off = 0,		/* 0 v */
 };
 #define CONFIG_SERIAL_OMAP_UART2_DMA 1		//dennis.oh 20110124 TI OPP patch
