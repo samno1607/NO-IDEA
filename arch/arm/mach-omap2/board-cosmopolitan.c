@@ -1171,8 +1171,8 @@ TWL6030_REGULATOR_DEVICE(vdac, 	1800000, 1800000, 0,0);
 
 static struct regulator_init_data sdp4430_vaux1 = {
 	.constraints = {
-		.min_uV			= 2800000,
-		.max_uV			= 2800000,
+		.min_uV			= 2750000,
+		.max_uV			= 2750000,
 		.apply_uV		= true,
 		.valid_modes_mask	= REGULATOR_MODE_NORMAL
 					| REGULATOR_MODE_STANDBY,
@@ -1241,8 +1241,8 @@ static struct regulator_init_data sdp4430_vpp = {
 
 static struct regulator_init_data sdp4430_vusim = {
 	.constraints = {
-		.min_uV			= 3000000,
-		.max_uV			= 3000000,
+		.min_uV			= 1750000,
+		.max_uV			= 1750000,
 		.apply_uV		= true,
 		.valid_modes_mask	= REGULATOR_MODE_NORMAL
 					| REGULATOR_MODE_STANDBY,
