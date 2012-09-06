@@ -2,7 +2,7 @@
 # Automatically generated make config: don't edit
 # Linux kernel version: 2.6.35.14
 # Tue Jan 18 21:05:34 2011
-# PromethiusProject Kernel Version 1.6
+# NO IDEA! Kernel Config
 
 
 CONFIG_ARM=y
@@ -2408,3 +2408,5 @@ CONFIG_HAS_IOMEM=y
 CONFIG_HAS_IOPORT=y
 CONFIG_HAS_DMA=y
 CONFIG_NLATTR=y
+
+# End Of Config File
