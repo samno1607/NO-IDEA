@@ -83,7 +83,7 @@ typedef struct __battery_graph_prop
 
 //#define UPDATE_SOC 1
 //#define DEBUG_MODE
-#define MAX17043_WORK_DELAY	(30 * HZ)	// 10s
+#define MAX17043_WORK_DELAY	(20 * HZ)	// 10s
 #define MAX17043_BATTERY_FULL	97		// Tuning Value
 #define MAX17043_TOLERANCE	20		// Tuning Value
 
